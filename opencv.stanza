@@ -1,0 +1,324 @@
+;; See license.txt for details about licensing.
+
+defpackage opencv :
+  import core
+  import gl
+
+public val CV-CAP-PROP-POS-FRAMES = 1
+
+extern cvLoadImage: (ptr<byte>, int) -> ptr<?>
+extern cvSaveImage: (ptr<byte>, ptr<?>) -> ptr<?>
+extern cvResize: (ptr<?>, ptr<?>, int) -> ptr<?>
+extern cvRelease: (ptr<?>) -> int
+extern cvReleaseCapture: (ptr<?>) -> int
+extern cvCreateFileCapture: (ptr<byte>) -> ptr<?>
+extern cvCreateCameraCapture: (int) -> ptr<?>
+extern cvRetrieveFrame: (ptr<?>, int) -> ptr<?>
+extern cvQueryFrame: (ptr<?>, int) -> ptr<?>
+extern cvSetCaptureProperty: (ptr<?>, int, int) -> int
+extern cvGetCaptureProperty: (ptr<?>, int) -> int
+extern cvGrabFrame: (ptr<?>) -> int
+extern cv_create_image: (ptr<int>, int, int) -> ptr<?>
+extern cv_get_size: (ptr<?>, ptr<int>) -> int
+extern cv_image_dat: (ptr<?>) -> ptr<byte>
+
+public lostanza deftype Image :
+  value: ptr<?>
+
+public lostanza defn image-value (img:ref<Image>) -> ref<Long> :
+  return new Long{img.value as long}
+
+defmethod print (s:OutputStream, o:Image) :
+  print-all(["Image(" image-value(o) "," dat(o) ")"])
+
+public lostanza defn null-image () -> ref<Image> :
+  return new Image{0 as long as ptr<?>}
+
+public lostanza defn null? (img:ref<Image>) -> ref<True|False> :
+  if (img.value as long) == 0 : return true else : return false
+
+public lostanza defn dat (i:ref<Image>) -> ref<ImageDat> :
+  val res = call-c cv_image_dat(i.value)
+  return new ImageDat{res}
+
+public lostanza deftype Capture :
+  value: ptr<?>
+
+public lostanza defn capture-value (cap:ref<Capture>) -> ref<Long> :
+  return new Long{cap.value as long}
+
+defmethod print (s:OutputStream, o:Capture) :
+  print-all(["Capture(" capture-value(o) ")"])
+
+public lostanza defn null? (c:ref<Capture>) -> ref<True|False> :
+  if c.value as long == 0 : return true else : return false
+
+public lostanza deftype Size :
+  width:  int
+  height: int
+
+public lostanza defn width (s:ref<Size>) -> ref<Int> :
+  return new Int{s.width}
+
+public lostanza defn height (s:ref<Size>) -> ref<Int> :
+  return new Int{s.height}
+
+defmethod print (o:OutputStream, s:Size) :
+  print-all([width(s) "x" height(s)])
+
+public lostanza defn Size (w:ref<Int>, h:ref<Int>) -> ref<Size> :
+  return new Size{w.value, h.value}
+
+public lostanza defn cv-load-image (filename:ref<String>, depth:ref<Int>) -> ref<Image> :
+  val res = call-c cvLoadImage(addr!(filename.chars), depth.value)
+  return new Image{res}
+  
+public lostanza defn cv-create-image (size:ref<Size>, depth:ref<Int>, channels:ref<Int>) -> ref<Image> :
+  val res = call-c cv_create_image(addr!(size.width), depth.value, channels.value)
+  return new Image{res}
+  
+public lostanza defn cv-save-image (filename:ref<String>, image:ref<Image>) -> ref<False> :
+  val res = call-c cvSaveImage(addr!(filename.chars), image.value)
+  return false
+  
+public lostanza defn cv-get-size (img:ref<Image>) -> ref<Size> :
+  val size = new Size{0, 0}
+  call-c cv_get_size(img.value, addr!(size.width))
+  return size
+
+public lostanza defn cv-resize (src:ref<Image>, dst:ref<Image>, type:ref<Int>) -> ref<Image> :
+  call-c cvResize(src.value, dst.value, type.value)
+  return dst
+  
+public lostanza defn cv-release (img:ref<Image>) -> ref<False> :
+  call-c cvRelease(addr!(img.value))
+  return false
+  
+public lostanza defn cv-create-camera-capture (index:ref<Int>) -> ref<Capture> :
+  val res = call-c cvCreateCameraCapture(index.value)
+  return new Capture{res}
+
+public lostanza defn cv-create-file-capture (filename:ref<String>) -> ref<Capture> :
+  val res = call-c cvCreateFileCapture(addr!(filename.chars))
+  return new Capture{res}
+
+public lostanza defn cv-release-capture (cap:ref<Capture>) -> ref<False> :
+  call-c cvReleaseCapture(addr!(cap.value))
+  return false
+  
+public lostanza defn cv-set-capture-property (cap:ref<Capture>, prop:ref<Int>, x:ref<Int>) -> ref<False> :
+  call-c cvSetCaptureProperty(cap.value, prop.value, x.value)
+  return false
+  
+public lostanza defn cv-get-capture-property (cap:ref<Capture>, prop:ref<Int>) -> ref<Int> :
+  val res = call-c cvGetCaptureProperty(cap.value, prop.value)
+  return new Int{res}
+  
+public lostanza defn cv-retrieve-frame (cap:ref<Capture>) -> ref<Image> :
+  val res = call-c cvRetrieveFrame(cap.value, 0)
+  return new Image{res}
+
+public lostanza defn cv-grab-frame (cap:ref<Capture>) -> ref<True|False> :
+  val res = call-c cvGrabFrame(cap.value)
+  if res == 1 : return true else: return false
+  
+public lostanza defn cv-query-frame (cap:ref<Capture>) -> ref<Image> :
+  val res = call-c cvQueryFrame(cap.value, 0)
+  return new Image{res}
+
+;; open-avi(filename)
+;; get-next-avi-frame(this)
+
+public defn vid-reset (cap:Capture) :
+  ;; println("RESET")
+  cv-set-capture-property(cap, CV-CAP-PROP-POS-FRAMES, 0)
+
+public defn open-vid (filename:String) -> Capture :
+  val cap = cv-create-file-capture(filename)
+  if not null?(cap) :
+    vid-reset(cap)
+    cv-get-capture-property(cap, CV-CAP-PROP-POS-FRAMES)
+    ;; println-all(["N FRAMES " n])
+  cap
+
+public defn get-next-frame (cap:Capture) -> Image :
+  ;; println-all(["CAP " cap])
+  if not null?(cap) :
+    val res = cv-query-frame(cap)
+    ;; println-all(["GOT NEXT FRAME " res])
+    res
+  else :
+    null-image()
+
+public defn* get-next-vid-frame (cap:Capture) -> Image :
+  val frame = get-next-frame(cap)
+  if null?(frame) :
+    vid-reset(cap)
+    get-next-vid-frame(cap)
+  else :
+    frame
+
+;; defn next-pow2-size (sz:Size) -> Size :
+;;   val dim = next-pow2(max(width(sz), height(sz)))
+;;   Size(dim dim)
+;; 
+;; public deftype Lay
+;; public defmulti open (l:Lay) -> False
+;; public defmulti close (l:Lay) -> False
+;; public defmulti render (l:Lay, w:Float, h:Float) -> False
+;; public defmulti exec (l:Lay) -> False
+;; 
+;; public deftype Tex <: Lay
+;; public defmulti size (t:Tex) -> Size
+;; public defmulti set-size (t:Tex, x:Size) -> False
+;; public defmulti texture (t:Tex) -> Texture
+;; public defmulti set-texture (t:Tex, x:False|Texture) -> False
+;; public defmulti pic (t:Tex) -> Image
+;; public defmulti open? (t:Tex) -> True|False
+;; 
+;; defn ensure-open (lay:Tex) :
+;;   if not open?(lay) :
+;;     open(lay)
+;; 
+;; defn tex-lay-open (lay:Tex) :
+;;   set-texture(lay, gl-null-texture())
+;; 
+;; defn tex-lay-close (lay:Tex) :
+;;   cv-release( pic(lay) )
+;;   set-size(lay, Size(0, 0))
+;;   if not null?(texture(lay)) :
+;;     println-all(["DELETING TEXTURE " texture(lay)])
+;;     gl-delete-texture(texture(lay))
+;;     set-texture(lay, gl-null-texture())
+;; 
+;; public defn tex-lay-render (lay:Tex, w:Float, h:Float) :
+;;   gl-push-attrib(GL-LINE-BIT | GL-CURRENT-BIT)
+;;   if null?(texture(lay)) :
+;;     set-texture(lay, gl-gen-texture())
+;;     val sz = cv-get-size(pic(lay))
+;;     println-all(["ALLOCATING TEXTURE " texture(lay)])
+;;     gl-bind-texture(GL-TEXTURE-2D, texture(lay))
+;;     gl-tex-parameteri(GL-TEXTURE-2D, GL-TEXTURE-MIN-FILTER, GL-LINEAR)
+;;     gl-tex-parameteri(GL-TEXTURE-2D, GL-TEXTURE-MAG-FILTER, GL-LINEAR)
+;;     gl-tex-image-2d(GL-TEXTURE-2D, 0, 3, width(sz), height(sz),
+;;                     0, GL-BGR-EXT, GL-UNSIGNED-BYTE, dat(pic(lay)))
+;; 
+;;   gl-enable(GL-TEXTURE-2D)
+;;   gl-bind-texture(GL-TEXTURE-2D, texture(lay))
+;;   gl-push-matrix()
+;;   gl-scalef(0.5f * w, 0.5f * h, 1.0f)
+;;   gl-begin(GL-QUADS)
+;;   gl-tex-coord2f(0.0f,  0.0f) gl-vertex2f(-1.0f,  1.0f)
+;;   gl-tex-coord2f(1.0f,  0.0f) gl-vertex2f( 1.0f,  1.0f)
+;;   gl-tex-coord2f(1.0f,  1.0f) gl-vertex2f( 1.0f, -1.0f)
+;;   gl-tex-coord2f(0.0f,  1.0f) gl-vertex2f(-1.0f, -1.0f)
+;;   gl-end()
+;;   gl-pop-matrix()
+;;   gl-pop-attrib(GL-LINE-BIT | GL-CURRENT-BIT)
+;;   gl-disable(GL-TEXTURE-2D)
+;; 
+;; defn calc-aspect-size (size:Size, gw:Float, gh:Float) -> [Float, Float] :
+;;   val w = gw
+;;   val h = gh
+;;   val iratio = to-float(width(size)) / to-float(height(size))
+;;   val sratio = w / h
+;;   val rratio = iratio / sratio
+;;   if rratio > 1.0f :
+;;     [w, h / rratio]
+;;   else :
+;;     [w * rratio, h]
+;; 
+;; defn open-jpg (filename:String, depth:Int) -> Image :
+;;   val res = cv-load-image(filename, depth)
+;;   println-all(["LOAD IMAGE " filename])
+;;   res
+;; 
+;; public deftype Pic <: Tex
+;; 
+;; public defn Pic (filename:String, depth:Int) :
+;;   var size = Size(0, 0)
+;;   var texture = gl-null-texture()
+;;   var pic = null-image()
+;;   var image = null-image()
+;;   var open? = false
+;;   new Pic :
+;;     defmethod open? (this) : open?
+;;     defmethod open (this) :
+;;       image = open-jpg(filename, 3)
+;;       size = next-pow2-size(cv-get-size(image))
+;;       pic = cv-create-image(size, 8, 3)
+;;       println-all(["CREATING PIC PIC " pic])
+;;       cv-resize(image, pic, 0)
+;;       cv-release(image)
+;;       tex-lay-open(this)
+;;       open? = true
+;;     defmethod close (this) :
+;;       tex-lay-close(this)
+;;       open? = false
+;;       false
+;;     defmethod render (this, aw:Float, ah:Float) :
+;;       ensure-open(this)
+;;       val [w, h] = calc-aspect-size(size, aw, ah)
+;;       gl-color3f(1.0f, 1.0f, 1.0f)
+;;       tex-lay-render(this, w, h)
+;;       false
+;;     defmethod size (this) : size
+;;     defmethod set-size (this, x:Size) : size = x
+;;     defmethod texture (this) : texture
+;;     defmethod set-texture (this, x:Texture) : texture = x
+;;     defmethod pic (this) : pic
+;; 
+;; public deftype Vid <: Tex
+;; public defn Vid (filename:String, depth:Int) :
+;;   var mov = false
+;;   var size = Size(0, 0)
+;;   var texture = gl-null-texture()
+;;   var pic = null-image()
+;;   var image = null-image()
+;;   var open? = false
+;;   new Vid :
+;;     defmethod open? (this) : open?
+;;     defmethod open (this) :
+;;       tex-lay-open(this)
+;;       mov = open-vid(filename)
+;;       open? = true
+;;     defmethod close (this) :
+;;       if mov is-not False: cv-release-capture(mov as Capture)
+;;       tex-lay-close(this)
+;;       open? = false
+;;     defmethod exec (this) :
+;;       ensure-open(this)
+;;       image = get-next-vid-frame(mov as Capture)
+;;       println-all(["VID IMAGE " image])
+;;       if null?(pic) :
+;;         size = next-pow2-size(cv-get-size(image))
+;;         pic = cv-create-image(size, 8, 3)
+;;         println-all(["CREATING VID " pic])
+;;         size = cv-get-size(image)
+;;       cv-resize(image, pic, 0)
+;;       false
+;;     defmethod render (this, aw:Float, ah:Float) :
+;;       ensure-open(this)
+;;       val [w, h] = calc-aspect-size(size, aw, ah)
+;;       gl-color3f(1.0f, 1.0f, 1.0f)
+;;       tex-lay-render(this, w, h)
+;;     defmethod size (this) : size
+;;     defmethod set-size (this, x:Size) : size = x
+;;     defmethod texture (this) : texture
+;;     defmethod set-texture (this, x:Texture) : texture = x
+;;     defmethod pic (this) : pic
+;; 
+;; ;; defn main () :
+;; ;;   val p = cv-load-image("zaia-birth.jpg", 8)
+;; ;;   val s = cv-get-size(p)
+;; ;;   println("SIZE = %_ x %_" % [width(s), height(s)])
+;; ;;   cv-release(p)
+;; ;;   val m = cv-create-file-capture("/Users/jrb/gooze/vids/jules-rocks.mov")
+;; ;;   println("CAP NULL? = %_" % [null?(m)])
+;; ;;   val i = get-next-vid-frame(m)
+;; ;;   val d = cv-get-size(i)
+;; ;;   println("SIZE = %_ x %_" % [width(d), height(d)])
+;; ;;   cv-release-capture(m)  
+;; ;; 
+;; ;; main()
+;; ;; 

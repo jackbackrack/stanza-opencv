@@ -19,6 +19,7 @@ extern cvSetCaptureProperty: (ptr<?>, int, int) -> int
 extern cvGetCaptureProperty: (ptr<?>, int) -> int
 extern cvGrabFrame: (ptr<?>) -> int
 extern cv_create_image: (ptr<int>, int, int) -> ptr<?>
+extern cv_dump_viewport: () -> int
 extern cv_get_size: (ptr<?>, ptr<int>) -> int
 extern cv_image_dat: (ptr<?>) -> ptr<byte>
 
@@ -125,6 +126,10 @@ public lostanza defn cv-grab-frame (cap:ref<Capture>) -> ref<True|False> :
 public lostanza defn cv-query-frame (cap:ref<Capture>) -> ref<Image> :
   val res = call-c cvQueryFrame(cap.value, 0)
   return new Image{res}
+
+public lostanza defn cv-dump-viewport () -> ref<False> :
+  call-c cv_dump_viewport()
+  return false
 
 ;; open-avi(filename)
 ;; get-next-avi-frame(this)

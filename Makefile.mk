@@ -1,6 +1,6 @@
 LIBS += ${GEN}/opencv.o -lopencv_core -lopencv_highgui -lopencv_video  -lopencv_imgproc
 
-stanza_opencv_all: ${GEN}/opencv.pkg
+stanza_opencv_all: ${GEN}/opencv.pkg ${GEN}/opencv.o
 
 ALL_PKG_DEPS += stanza_opencv_all
 

@@ -1,0 +1,4 @@
+package opencv defined-in "opencv.stanza"
+package opencv requires :
+  ccfiles : "opencv.c"
+  ccflags : "-lopencv_core -lopencv_highgui -lopencv_video -lopencv_improc"

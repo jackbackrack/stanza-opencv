@@ -2,7 +2,7 @@
 
 defpackage opencv :
   import core
-  import gl
+  import gfx/gl
 
 public val CV-CAP-PROP-POS-FRAMES = 1
 

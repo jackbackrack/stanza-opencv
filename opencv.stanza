@@ -4,164 +4,168 @@ defpackage opencv :
   import core
   import gfx/gl
 
-public val CV-CAP-PROP-POS-FRAMES = 1
+; public val CV-CAP-PROP-POS-FRAMES = 1
+; 
+; extern cvLoadImage: (ptr<byte>, int) -> ptr<?>
+; extern cvSaveImage: (ptr<byte>, ptr<?>) -> ptr<?>
+; extern cvResize: (ptr<?>, ptr<?>, int) -> ptr<?>
+; extern cvRelease: (ptr<?>) -> int
+; extern cvReleaseCapture: (ptr<?>) -> int
+; extern cvCreateFileCapture: (ptr<byte>) -> ptr<?>
+; extern cvCreateCameraCapture: (int) -> ptr<?>
+; extern cvRetrieveFrame: (ptr<?>, int) -> ptr<?>
+; extern cvQueryFrame: (ptr<?>, int) -> ptr<?>
+; extern cvSetCaptureProperty: (ptr<?>, int, int) -> int
+; extern cvGetCaptureProperty: (ptr<?>, int) -> int
+; extern cvGrabFrame: (ptr<?>) -> int
+; extern cv_create_image: (ptr<int>, int, int) -> ptr<?>
+; extern cv_get_size: (ptr<?>, ptr<int>) -> int
+; extern cv_image_dat: (ptr<?>) -> ptr<byte>
 
-extern cvLoadImage: (ptr<byte>, int) -> ptr<?>
-extern cvSaveImage: (ptr<byte>, ptr<?>) -> ptr<?>
-extern cvResize: (ptr<?>, ptr<?>, int) -> ptr<?>
-extern cvRelease: (ptr<?>) -> int
-extern cvReleaseCapture: (ptr<?>) -> int
-extern cvCreateFileCapture: (ptr<byte>) -> ptr<?>
-extern cvCreateCameraCapture: (int) -> ptr<?>
-extern cvRetrieveFrame: (ptr<?>, int) -> ptr<?>
-extern cvQueryFrame: (ptr<?>, int) -> ptr<?>
-extern cvSetCaptureProperty: (ptr<?>, int, int) -> int
-extern cvGetCaptureProperty: (ptr<?>, int) -> int
-extern cvGrabFrame: (ptr<?>) -> int
-extern cv_create_image: (ptr<int>, int, int) -> ptr<?>
-extern cv_dump_viewport: () -> int
-extern cv_get_size: (ptr<?>, ptr<int>) -> int
-extern cv_image_dat: (ptr<?>) -> ptr<byte>
+extern cv_dump_viewport: (ptr<byte>) -> int
 
-public lostanza deftype Image :
-  value: ptr<?>
+; public lostanza deftype Image :
+;   value: ptr<?>
+; 
+; public lostanza defn image-value (img:ref<Image>) -> ref<Long> :
+;   return new Long{img.value as long}
+; 
+; defmethod print (s:OutputStream, o:Image) :
+;   print-all(["Image(" image-value(o) "," dat(o) ")"])
+; 
+; public lostanza defn null-image () -> ref<Image> :
+;   return new Image{0 as long as ptr<?>}
+; 
+; public lostanza defn null? (img:ref<Image>) -> ref<True|False> :
+;   if (img.value as long) == 0 : return true else : return false
+; 
+; public lostanza defn dat (i:ref<Image>) -> ref<ImageDat> :
+;   val res = call-c cv_image_dat(i.value)
+;   return new ImageDat{res}
+; 
+; public lostanza deftype Capture :
+;   value: ptr<?>
+; 
+; public lostanza defn capture-value (cap:ref<Capture>) -> ref<Long> :
+;   return new Long{cap.value as long}
+; 
+; defmethod print (s:OutputStream, o:Capture) :
+;   print-all(["Capture(" capture-value(o) ")"])
+; 
+; public lostanza defn null? (c:ref<Capture>) -> ref<True|False> :
+;   if c.value as long == 0 : return true else : return false
+; 
+; public lostanza deftype Size :
+;   width:  int
+;   height: int
+; 
+; public lostanza defn width (s:ref<Size>) -> ref<Int> :
+;   return new Int{s.width}
+; 
+; public lostanza defn height (s:ref<Size>) -> ref<Int> :
+;   return new Int{s.height}
+; 
+; defmethod print (o:OutputStream, s:Size) :
+;   print-all([width(s) "x" height(s)])
+; 
+; public lostanza defn Size (w:ref<Int>, h:ref<Int>) -> ref<Size> :
+;   return new Size{w.value, h.value}
+; 
+; public lostanza defn cv-load-image (filename:ref<String>, depth:ref<Int>) -> ref<Image> :
+;   val res = call-c cvLoadImage(addr!(filename.chars), depth.value)
+;   return new Image{res}
+;   
+; public lostanza defn cv-create-image (size:ref<Size>, depth:ref<Int>, channels:ref<Int>) -> ref<Image> :
+;   val res = call-c cv_create_image(addr!(size.width), depth.value, channels.value)
+;   return new Image{res}
+;   
+; public lostanza defn cv-save-image (filename:ref<String>, image:ref<Image>) -> ref<False> :
+;   val res = call-c cvSaveImage(addr!(filename.chars), image.value)
+;   return false
+;   
+; public lostanza defn cv-get-size (img:ref<Image>) -> ref<Size> :
+;   val size = new Size{0, 0}
+;   call-c cv_get_size(img.value, addr!(size.width))
+;   return size
+; 
+; public lostanza defn cv-resize (src:ref<Image>, dst:ref<Image>, type:ref<Int>) -> ref<Image> :
+;   call-c cvResize(src.value, dst.value, type.value)
+;   return dst
+;   
+; public lostanza defn cv-release (img:ref<Image>) -> ref<False> :
+;   call-c cvRelease(addr!(img.value))
+;   return false
+;   
+; public lostanza defn cv-create-camera-capture (index:ref<Int>) -> ref<Capture> :
+;   val res = call-c cvCreateCameraCapture(index.value)
+;   return new Capture{res}
+; 
+; public lostanza defn cv-create-file-capture (filename:ref<String>) -> ref<Capture> :
+;   val res = call-c cvCreateFileCapture(addr!(filename.chars))
+;   return new Capture{res}
+; 
+; public lostanza defn cv-release-capture (cap:ref<Capture>) -> ref<False> :
+;   call-c cvReleaseCapture(addr!(cap.value))
+;   return false
+;   
+; public lostanza defn cv-set-capture-property (cap:ref<Capture>, prop:ref<Int>, x:ref<Int>) -> ref<False> :
+;   call-c cvSetCaptureProperty(cap.value, prop.value, x.value)
+;   return false
+;   
+; public lostanza defn cv-get-capture-property (cap:ref<Capture>, prop:ref<Int>) -> ref<Int> :
+;   val res = call-c cvGetCaptureProperty(cap.value, prop.value)
+;   return new Int{res}
+;   
+; public lostanza defn cv-retrieve-frame (cap:ref<Capture>) -> ref<Image> :
+;   val res = call-c cvRetrieveFrame(cap.value, 0)
+;   return new Image{res}
+; 
+; public lostanza defn cv-grab-frame (cap:ref<Capture>) -> ref<True|False> :
+;   val res = call-c cvGrabFrame(cap.value)
+;   if res == 1 : return true else: return false
+;   
+; public lostanza defn cv-query-frame (cap:ref<Capture>) -> ref<Image> :
+;   val res = call-c cvQueryFrame(cap.value, 0)
+;   return new Image{res}
 
-public lostanza defn image-value (img:ref<Image>) -> ref<Long> :
-  return new Long{img.value as long}
-
-defmethod print (s:OutputStream, o:Image) :
-  print-all(["Image(" image-value(o) "," dat(o) ")"])
-
-public lostanza defn null-image () -> ref<Image> :
-  return new Image{0 as long as ptr<?>}
-
-public lostanza defn null? (img:ref<Image>) -> ref<True|False> :
-  if (img.value as long) == 0 : return true else : return false
-
-public lostanza defn dat (i:ref<Image>) -> ref<ImageDat> :
-  val res = call-c cv_image_dat(i.value)
-  return new ImageDat{res}
-
-public lostanza deftype Capture :
-  value: ptr<?>
-
-public lostanza defn capture-value (cap:ref<Capture>) -> ref<Long> :
-  return new Long{cap.value as long}
-
-defmethod print (s:OutputStream, o:Capture) :
-  print-all(["Capture(" capture-value(o) ")"])
-
-public lostanza defn null? (c:ref<Capture>) -> ref<True|False> :
-  if c.value as long == 0 : return true else : return false
-
-public lostanza deftype Size :
-  width:  int
-  height: int
-
-public lostanza defn width (s:ref<Size>) -> ref<Int> :
-  return new Int{s.width}
-
-public lostanza defn height (s:ref<Size>) -> ref<Int> :
-  return new Int{s.height}
-
-defmethod print (o:OutputStream, s:Size) :
-  print-all([width(s) "x" height(s)])
-
-public lostanza defn Size (w:ref<Int>, h:ref<Int>) -> ref<Size> :
-  return new Size{w.value, h.value}
-
-public lostanza defn cv-load-image (filename:ref<String>, depth:ref<Int>) -> ref<Image> :
-  val res = call-c cvLoadImage(addr!(filename.chars), depth.value)
-  return new Image{res}
-  
-public lostanza defn cv-create-image (size:ref<Size>, depth:ref<Int>, channels:ref<Int>) -> ref<Image> :
-  val res = call-c cv_create_image(addr!(size.width), depth.value, channels.value)
-  return new Image{res}
-  
-public lostanza defn cv-save-image (filename:ref<String>, image:ref<Image>) -> ref<False> :
-  val res = call-c cvSaveImage(addr!(filename.chars), image.value)
+public lostanza defn cv-dump-viewport (filename:ref<String>) -> ref<False> :
+  call-c cv_dump_viewport(addr!(filename.chars))
   return false
-  
-public lostanza defn cv-get-size (img:ref<Image>) -> ref<Size> :
-  val size = new Size{0, 0}
-  call-c cv_get_size(img.value, addr!(size.width))
-  return size
 
-public lostanza defn cv-resize (src:ref<Image>, dst:ref<Image>, type:ref<Int>) -> ref<Image> :
-  call-c cvResize(src.value, dst.value, type.value)
-  return dst
-  
-public lostanza defn cv-release (img:ref<Image>) -> ref<False> :
-  call-c cvRelease(addr!(img.value))
-  return false
-  
-public lostanza defn cv-create-camera-capture (index:ref<Int>) -> ref<Capture> :
-  val res = call-c cvCreateCameraCapture(index.value)
-  return new Capture{res}
+public defn cv-dump-viewport () -> False :
+  cv-dump-viewport("")
 
-public lostanza defn cv-create-file-capture (filename:ref<String>) -> ref<Capture> :
-  val res = call-c cvCreateFileCapture(addr!(filename.chars))
-  return new Capture{res}
-
-public lostanza defn cv-release-capture (cap:ref<Capture>) -> ref<False> :
-  call-c cvReleaseCapture(addr!(cap.value))
-  return false
-  
-public lostanza defn cv-set-capture-property (cap:ref<Capture>, prop:ref<Int>, x:ref<Int>) -> ref<False> :
-  call-c cvSetCaptureProperty(cap.value, prop.value, x.value)
-  return false
-  
-public lostanza defn cv-get-capture-property (cap:ref<Capture>, prop:ref<Int>) -> ref<Int> :
-  val res = call-c cvGetCaptureProperty(cap.value, prop.value)
-  return new Int{res}
-  
-public lostanza defn cv-retrieve-frame (cap:ref<Capture>) -> ref<Image> :
-  val res = call-c cvRetrieveFrame(cap.value, 0)
-  return new Image{res}
-
-public lostanza defn cv-grab-frame (cap:ref<Capture>) -> ref<True|False> :
-  val res = call-c cvGrabFrame(cap.value)
-  if res == 1 : return true else: return false
-  
-public lostanza defn cv-query-frame (cap:ref<Capture>) -> ref<Image> :
-  val res = call-c cvQueryFrame(cap.value, 0)
-  return new Image{res}
-
-public lostanza defn cv-dump-viewport () -> ref<False> :
-  call-c cv_dump_viewport()
-  return false
-
-;; open-avi(filename)
-;; get-next-avi-frame(this)
-
-public defn vid-reset (cap:Capture) :
-  ;; println("RESET")
-  cv-set-capture-property(cap, CV-CAP-PROP-POS-FRAMES, 0)
-
-public defn open-vid (filename:String) -> Capture :
-  val cap = cv-create-file-capture(filename)
-  if not null?(cap) :
-    vid-reset(cap)
-    cv-get-capture-property(cap, CV-CAP-PROP-POS-FRAMES)
-    ;; println-all(["N FRAMES " n])
-  cap
-
-public defn get-next-frame (cap:Capture) -> Image :
-  ;; println-all(["CAP " cap])
-  if not null?(cap) :
-    val res = cv-query-frame(cap)
-    ;; println-all(["GOT NEXT FRAME " res])
-    res
-  else :
-    null-image()
-
-public defn* get-next-vid-frame (cap:Capture) -> Image :
-  val frame = get-next-frame(cap)
-  if null?(frame) :
-    vid-reset(cap)
-    get-next-vid-frame(cap)
-  else :
-    frame
+; ;; open-avi(filename)
+; ;; get-next-avi-frame(this)
+; 
+; public defn vid-reset (cap:Capture) :
+;   ;; println("RESET")
+;   cv-set-capture-property(cap, CV-CAP-PROP-POS-FRAMES, 0)
+; 
+; public defn open-vid (filename:String) -> Capture :
+;   val cap = cv-create-file-capture(filename)
+;   if not null?(cap) :
+;     vid-reset(cap)
+;     cv-get-capture-property(cap, CV-CAP-PROP-POS-FRAMES)
+;     ;; println-all(["N FRAMES " n])
+;   cap
+; 
+; public defn get-next-frame (cap:Capture) -> Image :
+;   ;; println-all(["CAP " cap])
+;   if not null?(cap) :
+;     val res = cv-query-frame(cap)
+;     ;; println-all(["GOT NEXT FRAME " res])
+;     res
+;   else :
+;     null-image()
+; 
+; public defn* get-next-vid-frame (cap:Capture) -> Image :
+;   val frame = get-next-frame(cap)
+;   if null?(frame) :
+;     vid-reset(cap)
+;     get-next-vid-frame(cap)
+;   else :
+;     frame
 
 ;; defn next-pow2-size (sz:Size) -> Size :
 ;;   val dim = next-pow2(max(width(sz), height(sz)))

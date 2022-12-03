@@ -1,4 +1,16 @@
+foreign-package-params(conan) :
+  conan-build-dir: "{WORKDIR}/build"
+  conan-install-extra-args: ["--build" "missing"]
+
 package opencv defined-in "opencv.stanza"
 package opencv requires :
-  ccfiles : "opencv.c"
-  ccflags : "-lopencv_core -lopencv_highgui -lopencv_video -lopencv_improc"
+  ccfiles:
+    "{WORKDIR}/build/opencv.o"
+  ccflags:
+    on-platform:
+      os-x  : ("{CONAN-INCLUDES}" "-lc++")
+      linux : ("{CONAN-INCLUDES}" "-lstdc++")
+  foreign-packages(conan) :
+    "opencv/4.5.5"
+compile file "{WORKDIR}/build/opencv.o" from "opencv.cpp" :
+  "g++ -c -O3 {.}/opencv.cpp --std=c++17 -DMACOSX -o {WORKDIR}/build/opencv.o {CONAN-INCLUDES}"

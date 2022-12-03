@@ -1,4 +1,4 @@
 name = "stanza-opencv"
-version = "0.1.0"
+version = "0.1.1"
 [dependencies]
-stanza-gfx = "jackbackrack/stanza-gfx|0.1.1"
+stanza-gfx = "jackbackrack/stanza-gfx|0.1.4"

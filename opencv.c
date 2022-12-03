@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "opencv/cv.h"
-#include "opencv/highgui.h"
+#include "opencv4/opencv2/cv.h"
+#include "opencv4/opencv2/highgui.h"
 
 
 #ifdef MACOSX

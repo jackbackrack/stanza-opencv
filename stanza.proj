@@ -1,6 +1,10 @@
 foreign-package-params(conan) :
   conan-build-dir: "{WORKDIR}/build"
+  conan-cache-dir: "{WORKDIR}/build"
   conan-install-extra-args: ["--build" "missing"]
+  conan-remotes:
+    {name: "jitx-conan-remote" value: "http://ec2-44-226-24-141.us-west-2.compute.amazonaws.com:9300"}
+    {name: "conancenter" value: "https://center.conan.io"}
 
 package opencv defined-in "opencv.stanza"
 package opencv requires :
@@ -8,7 +12,7 @@ package opencv requires :
     "{WORKDIR}/build/opencv.o"
   ccflags:
     on-platform:
-      os-x  : ("{CONAN-INCLUDES}" "-lc++")
+      os-x  : ("{CONAN-INCLUDES}" "-lc++" "-mmacosx-version-min=13.0")
       linux : ("{CONAN-INCLUDES}" "-lstdc++")
   foreign-packages(conan) :
     "opencv/4.5.5"
